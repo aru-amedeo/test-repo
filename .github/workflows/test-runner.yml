@@ -16,7 +16,7 @@ jobs:
       project_id:   ${{ steps.runner.outputs.project_id }}
       boot_disk_id: ${{ steps.runner.outputs.boot_disk_id }}
     steps:
-      - uses: Arubacloud/acloud-github-runner@v1
+      - uses: Arubacloud/acloud-github-runner@main
         id: runner
         with:
           mode:                 create
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - uses: Arubacloud/acloud-github-runner@v1
+      - uses: Arubacloud/acloud-github-runner@main
         with:
           mode:                 delete
           github_token:         ${{ secrets.GH_PAT }}
