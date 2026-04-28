@@ -1,0 +1,65 @@
+name: Test acloud-github-runner
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  # ── 1. Provision the ephemeral runner ───────────────────────────────────────
+  start-runner:
+    name: Start ephemeral runner
+    runs-on: ubuntu-latest
+    outputs:
+      label:        ${{ steps.runner.outputs.label }}
+      server_id:    ${{ steps.runner.outputs.server_id }}
+      project_id:   ${{ steps.runner.outputs.project_id }}
+      boot_disk_id: ${{ steps.runner.outputs.boot_disk_id }}
+    steps:
+      - uses: Arubacloud/acloud-github-runner@v1
+        id: runner
+        with:
+          mode:                 create
+          github_token:         ${{ secrets.GH_PAT }}
+          acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
+          acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
+          acloud_project_id:    ${{ secrets.ACLOUD_PROJECT_ID }}
+          vpc_uri:              ${{ secrets.ACLOUD_VPC_URI }}
+          subnet_uri:           ${{ secrets.ACLOUD_SUBNET_URI }}
+          security_group_uri:   ${{ secrets.ACLOUD_SECURITY_GROUP_URI }}
+          keypair_uri:          ${{ secrets.ACLOUD_KEYPAIR_URI }}
+          flavor:               CSO2A4   # 2 vCPU / 4 GB RAM
+          image:                LU22-001 # Ubuntu 22.04 LTS
+
+  # ── 2. Smoke test — runs on the ephemeral Aruba Cloud server ────────────────
+  smoke-test:
+    name: Smoke test
+    needs: start-runner
+    runs-on: ${{ needs.start-runner.outputs.label }}
+    steps:
+      - name: Verify runner identity
+        run: |
+          echo "Hostname : $(hostname)"
+          echo "User     : $(whoami)"
+          echo "Kernel   : $(uname -r)"
+          echo "CPUs     : $(nproc)"
+          echo "RAM      : $(free -h | awk '/Mem:/{print $2}')"
+          echo "Disk     : $(df -h / | awk 'NR==2{print $4}') free"
+          echo "✔ Running on Aruba Cloud!"
+
+  # ── 3. Tear down — always runs, even if smoke-test fails ────────────────────
+  stop-runner:
+    name: Stop ephemeral runner
+    needs: [start-runner, smoke-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: Arubacloud/acloud-github-runner@v1
+        with:
+          mode:                 delete
+          github_token:         ${{ secrets.GH_PAT }}
+          acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
+          acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
+          acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
+          server_id:            ${{ needs.start-runner.outputs.server_id }}
+          boot_disk_id:         ${{ needs.start-runner.outputs.boot_disk_id }}
