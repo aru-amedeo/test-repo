@@ -23,12 +23,12 @@ jobs:
           github_token:         ${{ secrets.GH_PAT }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
-          acloud_project_id:    ${{ secrets.ACLOUD_PROJECT_ID }}
-          vpc_uri:              ${{ secrets.ACLOUD_VPC_URI }}
-          subnet_uri:           ${{ secrets.ACLOUD_SUBNET_URI }}
-          security_group_uri:   ${{ secrets.ACLOUD_SECURITY_GROUP_URI }}
-          keypair_uri:          ${{ secrets.ACLOUD_KEYPAIR_URI }}
-          flavor:               CSO2A4   # 2 vCPU / 4 GB RAM
+          acloud_project_id:    68398923fb2cb026400d4d31
+          vpc_uri:              /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2
+          subnet_uri:           /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2/subnets/69ef351d3357d3fb8d3bcfc1
+          security_group_uri:   /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2/securityGroups/69ef351d3357d3fb8d3bcfc4
+          keypair_uri:          /projects/68398923fb2cb026400d4d31/providers/Aruba.Compute/keyPairs/69007ebf4e7d691466d8621e
+          flavor:               CSO4A8   # 4 vCPU / 8 GB RAM
           image:                LU22-001 # Ubuntu 22.04 LTS
 
   # ── 2. Smoke test — runs on the ephemeral Aruba Cloud server ────────────────
