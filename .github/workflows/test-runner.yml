@@ -60,6 +60,6 @@ jobs:
           github_token:         ${{ secrets.GH_PAT }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
-          acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
+          acloud_project_id:    68398923fb2cb026400d4d31
           server_id:            ${{ needs.start-runner.outputs.server_id }}
           boot_disk_id:         ${{ needs.start-runner.outputs.boot_disk_id }}
