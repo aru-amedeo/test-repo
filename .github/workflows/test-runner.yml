@@ -10,6 +10,8 @@ jobs:
   start-runner:
     name: Start ephemeral runner
     runs-on: ubuntu-latest
+    permissions:
+      administration: write
     outputs:
       label:        ${{ steps.runner.outputs.label }}
       server_id:    ${{ steps.runner.outputs.server_id }}
@@ -20,7 +22,7 @@ jobs:
         id: runner
         with:
           mode:                 create
-          github_token:         ${{ secrets.GH_PAT }}
+          github_token:         ${{ github.token }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
           acloud_project_id:    68398923fb2cb026400d4d31
@@ -53,11 +55,13 @@ jobs:
     needs: [start-runner, smoke-test]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      administration: write
     steps:
       - uses: Arubacloud/acloud-github-runner@main
         with:
           mode:                 delete
-          github_token:         ${{ secrets.GH_PAT }}
+          github_token:         ${{ github.token }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
           acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
