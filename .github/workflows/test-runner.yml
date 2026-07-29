@@ -27,7 +27,7 @@ jobs:
           github_token:         ${{ secrets.GH_PAT }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
-          acloud_project_id:    ${{ secrets.ACLOUD_PROJECT_ID }}
+          acloud_project_id:    ${{ vars.ACLOUD_PROJECT_ID }}
           # vpc_id, subnet_id and security_group_id are intentionally omitted
           # so the action auto-creates and manages them.
           flavor:               CSO4A8   # 4 vCPU / 8 GB RAM
