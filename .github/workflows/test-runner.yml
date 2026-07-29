@@ -10,13 +10,14 @@ jobs:
   start-runner:
     name: Start ephemeral runner
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       label:        ${{ steps.runner.outputs.label }}
       server_id:    ${{ steps.runner.outputs.server_id }}
       project_id:   ${{ steps.runner.outputs.project_id }}
       boot_disk_id: ${{ steps.runner.outputs.boot_disk_id }}
     steps:
-      - uses: Arubacloud/acloud-github-runner@feat/integration-test
+      - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
         id: runner
         with:
           mode:                 create
@@ -24,10 +25,10 @@ jobs:
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
           acloud_project_id:    68398923fb2cb026400d4d31
-          vpc_uri:              /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2
-          subnet_uri:           /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2/subnets/69ef351d3357d3fb8d3bcfc1
-          security_group_uri:   /projects/68398923fb2cb026400d4d31/providers/Aruba.Network/vpcs/69ef350e3357d3fb8d3bcfb2/securityGroups/69ef351d3357d3fb8d3bcfc4
-          keypair_uri:          /projects/68398923fb2cb026400d4d31/providers/Aruba.Compute/keyPairs/69007ebf4e7d691466d8621e
+          vpc_id:               69ef350e3357d3fb8d3bcfb2
+          subnet_id:            69ef351d3357d3fb8d3bcfc1
+          security_group_id:    69ef351d3357d3fb8d3bcfc4
+          keypair_id:           69007ebf4e7d691466d8621e
           flavor:               CSO4A8   # 4 vCPU / 8 GB RAM
           image:                LU22-001 # Ubuntu 22.04 LTS
 
@@ -36,6 +37,7 @@ jobs:
     name: Smoke test
     needs: start-runner
     runs-on: ${{ needs.start-runner.outputs.label }}
+    timeout-minutes: 10
     steps:
       - name: Verify runner identity
         run: |
@@ -45,21 +47,23 @@ jobs:
           echo "CPUs     : $(nproc)"
           echo "RAM      : $(free -h | awk '/Mem:/{print $2}')"
           echo "Disk     : $(df -h / | awk 'NR==2{print $4}') free"
-          echo "✔ Running on Aruba Cloud!"
+          echo "Runner is ephemeral: $RUNNER_EPHEMERAL"
 
   # ── 3. Tear down — always runs, even if smoke-test fails ────────────────────
   stop-runner:
     name: Stop ephemeral runner
     needs: [start-runner, smoke-test]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: always()
     steps:
-      - uses: Arubacloud/acloud-github-runner@feat/integration-test
+      - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
         with:
           mode:                 delete
           github_token:         ${{ secrets.GH_PAT }}
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
-          acloud_project_id:    68398923fb2cb026400d4d31
+          acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
           server_id:            ${{ needs.start-runner.outputs.server_id }}
           boot_disk_id:         ${{ needs.start-runner.outputs.boot_disk_id }}
+          name:                 ${{ needs.start-runner.outputs.label }}
