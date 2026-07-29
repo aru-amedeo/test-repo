@@ -12,10 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
-      label:        ${{ steps.runner.outputs.label }}
-      server_id:    ${{ steps.runner.outputs.server_id }}
-      project_id:   ${{ steps.runner.outputs.project_id }}
-      boot_disk_id: ${{ steps.runner.outputs.boot_disk_id }}
+      label:                 ${{ steps.runner.outputs.label }}
+      server_id:             ${{ steps.runner.outputs.server_id }}
+      project_id:            ${{ steps.runner.outputs.project_id }}
+      boot_disk_id:          ${{ steps.runner.outputs.boot_disk_id }}
+      auto_vpc_id:           ${{ steps.runner.outputs.auto_vpc_id }}
+      auto_subnet_id:        ${{ steps.runner.outputs.auto_subnet_id }}
+      auto_security_group_id: ${{ steps.runner.outputs.auto_security_group_id }}
     steps:
       - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
         id: runner
@@ -25,10 +28,8 @@ jobs:
           acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
           acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
           acloud_project_id:    68398923fb2cb026400d4d31
-          vpc_id:               69ef350e3357d3fb8d3bcfb2
-          subnet_id:            69ef351d3357d3fb8d3bcfc1
-          security_group_id:    69ef351d3357d3fb8d3bcfc4
-          keypair_id:           69007ebf4e7d691466d8621e
+          # vpc_id, subnet_id and security_group_id are intentionally omitted
+          # so the action auto-creates and manages them.
           flavor:               CSO4A8   # 4 vCPU / 8 GB RAM
           image:                LU22-001 # Ubuntu 22.04 LTS
 
@@ -59,11 +60,14 @@ jobs:
     steps:
       - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
         with:
-          mode:                 delete
-          github_token:         ${{ secrets.GH_PAT }}
-          acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
-          acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
-          acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
-          server_id:            ${{ needs.start-runner.outputs.server_id }}
-          boot_disk_id:         ${{ needs.start-runner.outputs.boot_disk_id }}
-          name:                 ${{ needs.start-runner.outputs.label }}
+          mode:                   delete
+          github_token:           ${{ secrets.GH_PAT }}
+          acloud_client_id:       ${{ secrets.ACLOUD_CLIENT_ID }}
+          acloud_client_secret:   ${{ secrets.ACLOUD_CLIENT_SECRET }}
+          acloud_project_id:      ${{ needs.start-runner.outputs.project_id }}
+          server_id:              ${{ needs.start-runner.outputs.server_id }}
+          boot_disk_id:           ${{ needs.start-runner.outputs.boot_disk_id }}
+          name:                   ${{ needs.start-runner.outputs.label }}
+          auto_vpc_id:            ${{ needs.start-runner.outputs.auto_vpc_id }}
+          auto_subnet_id:         ${{ needs.start-runner.outputs.auto_subnet_id }}
+          auto_security_group_id: ${{ needs.start-runner.outputs.auto_security_group_id }}
