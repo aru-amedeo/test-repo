@@ -1,0 +1,68 @@
+name: Test acloud-github-runner (existing resources)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # ── 1. Provision the ephemeral runner ───────────────────────────────────────
+  start-runner:
+    name: Start ephemeral runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      label:        ${{ steps.runner.outputs.label }}
+      server_id:    ${{ steps.runner.outputs.server_id }}
+      project_id:   ${{ steps.runner.outputs.project_id }}
+      boot_disk_id: ${{ steps.runner.outputs.boot_disk_id }}
+    steps:
+      - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
+        id: runner
+        with:
+          mode:                 create
+          github_token:         ${{ secrets.GH_PAT }}
+          acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
+          acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
+          acloud_project_id:    6a5f269d7f2d2262689b0f11
+          vpc_id:               6a6a075f153f5fc1103ecd79
+          subnet_id:            6a6a076f45076d045a41521b
+          security_group_id:    6a6a076f45076d045a41521d
+          flavor:               CSO4A8   # 4 vCPU / 8 GB RAM
+          image:                LU22-001 # Ubuntu 22.04 LTS
+
+  # ── 2. Smoke test — runs on the ephemeral Aruba Cloud server ────────────────
+  smoke-test:
+    name: Smoke test
+    needs: start-runner
+    runs-on: ${{ needs.start-runner.outputs.label }}
+    timeout-minutes: 10
+    steps:
+      - name: Verify runner identity
+        run: |
+          echo "Hostname : $(hostname)"
+          echo "User     : $(whoami)"
+          echo "Kernel   : $(uname -r)"
+          echo "CPUs     : $(nproc)"
+          echo "RAM      : $(free -h | awk '/Mem:/{print $2}')"
+          echo "Disk     : $(df -h / | awk 'NR==2{print $4}') free"
+          echo "Runner is ephemeral: $RUNNER_EPHEMERAL"
+
+  # ── 3. Tear down — always runs, even if smoke-test fails ────────────────────
+  stop-runner:
+    name: Stop ephemeral runner
+    needs: [start-runner, smoke-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: always()
+    steps:
+      - uses: Arubacloud/acloud-github-runner@feat/acloud-cli-v1
+        with:
+          mode:                 delete
+          github_token:         ${{ secrets.GH_PAT }}
+          acloud_client_id:     ${{ secrets.ACLOUD_CLIENT_ID }}
+          acloud_client_secret: ${{ secrets.ACLOUD_CLIENT_SECRET }}
+          acloud_project_id:    ${{ needs.start-runner.outputs.project_id }}
+          server_id:            ${{ needs.start-runner.outputs.server_id }}
+          boot_disk_id:         ${{ needs.start-runner.outputs.boot_disk_id }}
+          name:                 ${{ needs.start-runner.outputs.label }}
+          # auto_vpc/subnet/security_group_id intentionally omitted —
+          # the VPC, subnet and security group are pre-existing and must not be deleted.
